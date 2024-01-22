@@ -34,7 +34,7 @@ async def get_submenu(menu_id: UUID, submenu_id: UUID):
 async def post_submenu(menu_id: UUID, submenu: SubmenuSchema):
     resp = await submenu_repo.create_one(submenu, menu_id)
     if not resp:
-        raise HTTPException(status_code=404, detail='menu not found')
+        raise HTTPException(status_code=404, detail='submenu not found')
     return submenu_repo.to_repr_one(resp)
 
 

@@ -1,4 +1,3 @@
-from pydantic import BaseModel
 from sqlalchemy import insert, select, delete, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import selectinload
@@ -10,22 +9,20 @@ from uuid import UUID
 class SubmenuRepository(AbstractRepository):
     orm: SubmenuOrm
 
-    async def create_one(self, value: BaseModel, m_id: UUID):
-        vdict = value.model_dump()
-        vdict['menu_id'] = m_id
-        stmt = insert(self.orm).values(**vdict).returning(self.orm.id)
+    async def create_one(self, value: dict, m_id: UUID):
+        value['menu_id'] = m_id
+        stmt = insert(self.orm).values(**value).returning(self.orm.id)
         async with self.session() as session:
             try:
                 result = (await session.execute(stmt)).scalar_one()
                 response = await session.execute(
                     select(self.orm)
                     .filter_by(id=result)
-                    .options(selectinload(self.orm.dish))
                     .execution_options(populate_existing=True)
                 )
-                response = response.scalar_one().to_read_model()
+                response = response.unique().scalar_one().to_read_model()
                 await session.commit()
-                return response
+                return self.to_repr_one(response)
             except IntegrityError:
                 return None
 
@@ -33,17 +30,16 @@ class SubmenuRepository(AbstractRepository):
         query = select(self.orm).filter_by(menu_id=m_id)
         async with self.session() as session:
             result = await session.execute(query)
-            return [x.to_read_model() for x in result.scalars().all()]
+            return self.to_repr_all([x.to_read_model() for x in result.unique().scalars().all()])
 
     async def get_one(self, sm_id: UUID):
         query = select(self.orm).filter_by(id=sm_id).options(selectinload(self.orm.dish))
         async with self.session() as session:
-            result = await session.execute(query)
             try:
-                scalar = result.scalar_one()
-                return scalar.to_read_model()
+                result = (await session.execute(query)).unique().scalar_one().to_read_model()
+                return self.to_repr_one(result)
             except NoResultFound:
-                return False
+                return None
 
     async def delete_one(self, sm_id: UUID):
         stmt = delete(self.orm).filter_by(id=sm_id)
@@ -51,24 +47,22 @@ class SubmenuRepository(AbstractRepository):
             await session.execute(stmt)
             await session.commit()
 
-    async def update_one(self, value: BaseModel, m_id: UUID, sm_id: UUID):
-        stmt = update(self.orm).values(value.model_dump()).filter_by(id=sm_id).returning(self.orm.id)
+    async def update_one(self, value: dict, sm_id: UUID):
+        stmt = update(self.orm).values(value).filter_by(id=sm_id).returning(self.orm.id)
         async with self.session() as session:
             try:
                 result = (await session.execute(stmt)).scalar_one()
                 response = await session.execute(
                     select(self.orm)
                     .filter_by(id=result)
-                    .options(selectinload(self.orm.dish))
-                    .execution_options(populate_existing=True)
                 )
-                response = response.scalar_one().to_read_model()
+                response = response.unique().scalar_one().to_read_model()
                 await session.commit()
-                return response
+                return self.to_repr_one(response)
             except IntegrityError:
                 return None
 
-    def to_repr_all(self, arg: dict):
+    def to_repr_all(self, arg: list):
         for x in arg:
             self.to_repr_one(x)
         return arg

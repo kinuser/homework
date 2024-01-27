@@ -11,7 +11,7 @@ class MenuOrm(Base):
     id: Mapped[uuid.UUID] = mapped_column(default=uuid.uuid4, primary_key=True)
     description: Mapped[str]
     title: Mapped[str]
-    submenu: Mapped[List["SubmenuOrm"]] = relationship(cascade="all, delete-orphan", lazy='selectin')
+    submenu: Mapped[List["SubmenuOrm"]] = relationship(cascade="all, delete-orphan", lazy='joined')
 
     def to_read_model(self) -> dict:
         return {
@@ -28,14 +28,14 @@ class SubmenuOrm(Base):
     description: Mapped[str]
     title: Mapped[str]
     menu_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('menu.id', ondelete='CASCADE'))
-    dish: Mapped[List["DishOrm"]] = relationship(cascade="all, delete-orphan", lazy='selectin')
+    dish: Mapped[List["DishOrm"]] = relationship(cascade="all, delete-orphan", lazy='joined')
 
     def to_read_model(self) -> dict:
-        print(self.dish)
         return {
             'id': self.id,
             'description': self.description,
             'title': self.title,
+            'menu_id': self.menu_id,
             'dish': [x.to_read_model() for x in self.dish]
         }
 

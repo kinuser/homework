@@ -1,0 +1,37 @@
+services:
+    fastapi:
+        build: .
+        env_file: .env
+        expose:
+            - 8000
+        ports:
+            - "8000:8000"
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://fastapi:8000/docs"]
+            interval: 5s
+            timeout: 3s
+            retries: 5
+            start_period: 5s
+        depends_on:
+            db:
+                condition: service_healthy
+    db:
+        image: postgres
+        ports:
+            - "5432:5432"
+        env_file: .env
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready", "-U", "postgres", "-d", "homework_db", "-p", "5432", "-h", "db"]
+            interval: 5s
+            timeout: 3s
+            retries: 5
+            start_period: 10s
+    # tests:
+    #     build: ./tests_for_api
+    #     env_file: .env
+    #     depends_on:
+    #         fastapi:
+    #             condition: service_healthy
+    
+
+    

@@ -10,8 +10,6 @@ RUN pip install -r requirements.txt
 
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
-# ENV APP_HOST=localhost
-# ENV APP_PORT=8000
 
 
 CMD ["pytest", "-sv", "."]

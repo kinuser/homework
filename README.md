@@ -3,3 +3,5 @@
 Указал версию postgres в compose.yml
 
 Реализовал запуск всего через docker compose.
+
+Запуск командой ```docker compose up``` (без ```-d``` для логов тестов)

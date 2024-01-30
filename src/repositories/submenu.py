@@ -1,73 +1,58 @@
-from sqlalchemy import insert, select, delete, update
+from pydantic import BaseModel
+from sqlalchemy import insert, select, delete, update, and_, func
 from sqlalchemy.exc import IntegrityError, NoResultFound
-from sqlalchemy.orm import selectinload
-from models import SubmenuOrm
+from models import dish_table, menu_table, get_one_submenu, get_all_submenu
 from repositories.abstract import AbstractRepository
 from uuid import UUID
 
 
+
 class SubmenuRepository(AbstractRepository):
-    orm: SubmenuOrm
 
     async def create_one(self, value: dict, m_id: UUID):
         value['menu_id'] = m_id
-        stmt = insert(self.orm).values(**value).returning(self.orm.id)
+        stmt = insert(self.table).values(**value).returning(self.table.c.id)
         async with self.session() as session:
             try:
-                result = (await session.execute(stmt)).scalar_one()
-                response = await session.execute(
-                    select(self.orm)
-                    .filter_by(id=result)
-                    .execution_options(populate_existing=True)
-                )
-                response = response.unique().scalar_one().to_read_model()
+                dict_id = (await session.execute(stmt)).first()._asdict()
+                result = (await session.execute(get_one_submenu(dict_id['id']))).first()._asdict()
                 await session.commit()
-                return self.to_repr_one(response)
+                return result
             except IntegrityError:
                 return None
 
     async def get_all(self, m_id: UUID):
-        query = select(self.orm).filter_by(menu_id=m_id)
         async with self.session() as session:
-            result = await session.execute(query)
-            return self.to_repr_all([x.to_read_model() for x in result.unique().scalars().all()])
+            result = await session.execute(get_all_submenu())
+            return [x._asdict() for x in result.unique().all()]
 
     async def get_one(self, sm_id: UUID):
-        query = select(self.orm).filter_by(id=sm_id).options(selectinload(self.orm.dish))
         async with self.session() as session:
             try:
-                result = (await session.execute(query)).unique().scalar_one().to_read_model()
-                return self.to_repr_one(result)
-            except NoResultFound:
+                result = await session.execute(get_one_submenu(sm_id))
+                return result.first()._asdict()
+            except (NoResultFound, AttributeError):
                 return None
 
     async def delete_one(self, sm_id: UUID):
-        stmt = delete(self.orm).filter_by(id=sm_id)
-        async with self.session() as session:
-            await session.execute(stmt)
-            await session.commit()
-
-    async def update_one(self, value: dict, sm_id: UUID):
-        stmt = update(self.orm).values(value).filter_by(id=sm_id).returning(self.orm.id)
+        stmt = delete(self.table).filter_by(id=sm_id)
         async with self.session() as session:
             try:
-                result = (await session.execute(stmt)).scalar_one()
-                response = await session.execute(
-                    select(self.orm)
-                    .filter_by(id=result)
-                )
-                response = response.unique().scalar_one().to_read_model()
+                await session.execute(stmt)
                 await session.commit()
-                return self.to_repr_one(response)
+                return True
             except IntegrityError:
                 return None
 
-    def to_repr_all(self, arg: list):
-        for x in arg:
-            self.to_repr_one(x)
-        return arg
+    async def update_one(self, value: dict, sm_id: UUID):
+        stmt = (update(self.table).values(**value).filter_by(id=sm_id)
+                .returning(self.table.c.id))
+        async with self.session() as session:
+            try:
+                dict_id = (await session.execute(stmt)).first()._asdict()
+                result = (await session.execute(get_one_submenu(dict_id['id']))).first()._asdict()
+                await session.commit()
+                return result
+            except IntegrityError:
+                return None
 
-    def to_repr_one(self, arg: dict):
-        arg['dishes_count'] = len(arg['dish'])
-        del arg['dish']
-        return arg

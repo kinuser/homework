@@ -16,7 +16,7 @@ services:
             db:
                 condition: service_healthy
     db:
-        image: postgres
+        image: postgres:16.1
         ports:
             - "5432:5432"
         env_file: .env
@@ -26,12 +26,12 @@ services:
             timeout: 3s
             retries: 5
             start_period: 10s
-    # tests:
-    #     build: ./tests_for_api
-    #     env_file: .env
-    #     depends_on:
-    #         fastapi:
-    #             condition: service_healthy
+    tests:
+        build: ./tests_for_api
+        env_file: .env
+        depends_on:
+            fastapi:
+                condition: service_healthy
     
 
     

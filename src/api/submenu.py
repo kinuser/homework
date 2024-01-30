@@ -1,7 +1,7 @@
 from uuid import UUID
 from fastapi import APIRouter, HTTPException
 from database import Session
-from models import SubmenuOrm
+from models import submenu_table
 from repositories.submenu import SubmenuRepository
 from schemas import SubmenuSchema
 
@@ -10,15 +10,14 @@ router = APIRouter(
     tags=['Submenu CRUD']
 )
 
-submenu_repo = SubmenuRepository(SubmenuOrm, Session)
+submenu_repo = SubmenuRepository(submenu_table, Session)
 
 perm_string = '/{menu_id}/submenus'
 
 
 @router.get(perm_string)
 async def get_all_submenus(menu_id: UUID):
-    resp = await submenu_repo.get_all(menu_id)
-    return resp
+    return await submenu_repo.get_all(menu_id)
 
 
 @router.get(perm_string + '/{submenu_id}')
@@ -26,7 +25,6 @@ async def get_submenu(menu_id: UUID, submenu_id: UUID):
     resp = await submenu_repo.get_one(submenu_id)
     if not resp:
         raise HTTPException(status_code=404, detail='submenu not found')
-
     return resp
 
 
@@ -34,20 +32,21 @@ async def get_submenu(menu_id: UUID, submenu_id: UUID):
 async def post_submenu(menu_id: UUID, submenu: SubmenuSchema):
     resp = await submenu_repo.create_one(submenu.model_dump(), menu_id)
     if not resp:
-        raise HTTPException(status_code=404, detail='submenu not found')
+        raise HTTPException(status_code=404, detail='menu not found')
     return resp
 
 
 @router.delete(perm_string + '/{submenu_id}')
 async def delete_submenu(menu_id: UUID, submenu_id: UUID):
-    await submenu_repo.delete_one(submenu_id)
-    return
+    if await submenu_repo.delete_one(submenu_id):
+        return
+    else:
+        raise HTTPException(status_code=404, detail='submenu not found')
 
 
 @router.patch(perm_string + '/{submenu_id}')
 async def update_submenu(menu_id: UUID, submenu_id: UUID, submenu: SubmenuSchema):
     resp = await submenu_repo.update_one(submenu.model_dump(), submenu_id)
     if not resp:
-        raise HTTPException(status_code=404, detail='menu not found')
-
+        raise HTTPException(status_code=404, detail='submenu not found')
     return resp

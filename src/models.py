@@ -31,6 +31,7 @@ dish_table = Table(
     Column('submenu_id', UUID, ForeignKey('submenu.id', ondelete='CASCADE'))
 )
 
+
 def get_all_menus():
     sub_without_id = (
         select(func.count(submenu_table.c.id).label('submenus_count'), submenu_table.c.menu_id)
@@ -39,7 +40,6 @@ def get_all_menus():
     )
     subs_with_id = (
         select(sub_without_id.c.submenus_count, sub_without_id.c.menu_id, submenu_table.c.id)
-        # .join_from(submenu_table)
         .join(sub_without_id, sub_without_id.c.menu_id == submenu_table.c.menu_id)
         .cte()
     )
@@ -51,7 +51,6 @@ def get_all_menus():
 
     counters = (
         select(dish_c.c.dishes_count, subs_with_id.c.submenus_count, subs_with_id.c.menu_id)
-        # .join_from(subs_with_id)
         .outerjoin(dish_c, subs_with_id.c.id == dish_c.c.submenu_id)
         .cte()
     )
@@ -66,16 +65,15 @@ def get_all_menus():
 
     return get_all_menu
 
+
 def get_one_menu(id: UUID):
     sub_without_id = (
         select(func.count(submenu_table.c.id).label('submenus_count'), submenu_table.c.menu_id)
-        # .where(submenu_table.c.menu_id == id)
         .group_by(submenu_table.c.menu_id)
         .cte()
     )
     subs_with_id = (
         select(sub_without_id.c.submenus_count, sub_without_id.c.menu_id, submenu_table.c.id)
-        # .join_from(submenu_table)
         .join(sub_without_id, sub_without_id.c.menu_id == submenu_table.c.menu_id)
         .cte()
     )
@@ -87,7 +85,6 @@ def get_one_menu(id: UUID):
 
     counters = (
         select(dish_c.c.dishes_count, subs_with_id.c.submenus_count, subs_with_id.c.menu_id)
-        # .join_from(subs_with_id)
         .outerjoin(dish_c, subs_with_id.c.id == dish_c.c.submenu_id)
         .cte()
     )
@@ -97,7 +94,6 @@ def get_one_menu(id: UUID):
                func.coalesce(counters.c.dishes_count, 0).label('dishes_count'),
                func.coalesce(counters.c.submenus_count, 0).label('submenus_count'))
         .where(menu_table.c.id == id)
-        # .join_from(menu_table)
         .outerjoin(counters, menu_table.c.id == counters.c.menu_id)
     )
 
@@ -111,6 +107,7 @@ def get_all_submenu():
                 .group_by(submenu_table.c.id)
             )
     return query
+
 
 def get_one_submenu(id: UUID):
     query = (

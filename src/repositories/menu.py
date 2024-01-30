@@ -21,7 +21,6 @@ class MenuRepository(AbstractRepository):
 
     async def get_all(self):
         query = get_all_menus()
-        print(query.compile(compile_kwargs={"literal_binds": True}))
         async with self.session() as session:
             result = await session.execute(query)
             return [x._asdict() for x in result.all()]

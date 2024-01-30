@@ -5,6 +5,7 @@ from database import async_engine
 from models import metadata
 import uvicorn
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Load the ML model

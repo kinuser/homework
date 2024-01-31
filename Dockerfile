@@ -1,4 +1,4 @@
-FROM python
+FROM python:3.10-slim
 
 SHELL ["/bin/bash", "-c"]
 WORKDIR /app
@@ -6,6 +6,8 @@ WORKDIR /app
 COPY src/. .env pytest.ini requirements.txt ./
 RUN pip install --upgrade pip 
 RUN pip install -r requirements.txt
+RUN apt-get -y update
+RUN apt-get -y install curl
 
 
 ENV PYTHONUNBUFFERED 1

@@ -5,7 +5,7 @@ import pytest
 from config import APP_HOST, APP_PORT
 
 
-@pytest.mark.usefixtures('anyio_backend')
+@pytest.mark.asyncio(scope='session')
 class TestSubmenuCRUD:
 
     async def test_post_menu(self):

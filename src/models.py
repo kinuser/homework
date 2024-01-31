@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Table, Column, MetaData, String, Integer, ForeignKey, Numeric, UUID, DDL, event, select, func
+from sqlalchemy import Table, Column, MetaData, String, ForeignKey, UUID, select, func, distinct
 
 metadata = MetaData()
 
@@ -40,7 +40,7 @@ def get_all_menus():
     )
     subs_with_id = (
         select(sub_without_id.c.submenus_count, sub_without_id.c.menu_id, submenu_table.c.id)
-        .join(sub_without_id, sub_without_id.c.menu_id == submenu_table.c.menu_id)
+        .outerjoin(sub_without_id, sub_without_id.c.menu_id == submenu_table.c.menu_id)
         .cte()
     )
     dish_c = (
@@ -50,8 +50,13 @@ def get_all_menus():
     )
 
     counters = (
-        select(dish_c.c.dishes_count, subs_with_id.c.submenus_count, subs_with_id.c.menu_id)
+        select(
+            func.sum(dish_c.c.dishes_count).label('dishes_count'),
+            func.count(subs_with_id.c.submenus_count).label('submenus_count'),
+            subs_with_id.c.menu_id
+        )
         .outerjoin(dish_c, subs_with_id.c.id == dish_c.c.submenu_id)
+        .group_by(subs_with_id.c.menu_id)
         .cte()
     )
 
@@ -59,8 +64,9 @@ def get_all_menus():
         select(menu_table,
                func.coalesce(counters.c.dishes_count, 0).label('dishes_count'),
                func.coalesce(counters.c.submenus_count, 0).label('submenus_count'))
-        # .join_from(menu_table)
-        .outerjoin(counters, menu_table.c.id == counters.c.menu_id)
+        .distinct()
+        .outerjoin_from(menu_table, counters, menu_table.c.id == counters.c.menu_id)
+
     )
 
     return get_all_menu
@@ -74,7 +80,7 @@ def get_one_menu(id: UUID):
     )
     subs_with_id = (
         select(sub_without_id.c.submenus_count, sub_without_id.c.menu_id, submenu_table.c.id)
-        .join(sub_without_id, sub_without_id.c.menu_id == submenu_table.c.menu_id)
+        .outerjoin(sub_without_id, sub_without_id.c.menu_id == submenu_table.c.menu_id)
         .cte()
     )
     dish_c = (
@@ -84,8 +90,13 @@ def get_one_menu(id: UUID):
     )
 
     counters = (
-        select(dish_c.c.dishes_count, subs_with_id.c.submenus_count, subs_with_id.c.menu_id)
+        select(
+            func.sum(dish_c.c.dishes_count).label('dishes_count'),
+            func.count(subs_with_id.c.submenus_count).label('submenus_count'),
+            subs_with_id.c.menu_id
+        )
         .outerjoin(dish_c, subs_with_id.c.id == dish_c.c.submenu_id)
+        .group_by(subs_with_id.c.menu_id)
         .cte()
     )
 
@@ -93,16 +104,19 @@ def get_one_menu(id: UUID):
         select(menu_table,
                func.coalesce(counters.c.dishes_count, 0).label('dishes_count'),
                func.coalesce(counters.c.submenus_count, 0).label('submenus_count'))
-        .where(menu_table.c.id == id)
-        .outerjoin(counters, menu_table.c.id == counters.c.menu_id)
+        .distinct()
+        .where(menu_table.c.id == id )
+        .outerjoin_from(menu_table, counters, menu_table.c.id == counters.c.menu_id)
+
     )
 
     return get_one
 
 
-def get_all_submenu():
+def get_all_submenu(id: UUID):
     query = (
                 select(submenu_table, func.count(dish_table.c.id).label('dishes_count'))
+                .where(submenu_table.c.menu_id == id)
                 .outerjoin(dish_table, dish_table.c.submenu_id==submenu_table.c.id)
                 .group_by(submenu_table.c.id)
             )

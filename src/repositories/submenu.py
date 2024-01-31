@@ -23,7 +23,7 @@ class SubmenuRepository(AbstractRepository):
 
     async def get_all(self, m_id: UUID):
         async with self.session() as session:
-            result = await session.execute(get_all_submenu())
+            result = await session.execute(get_all_submenu(m_id))
             return [x._asdict() for x in result.unique().all()]
 
     async def get_one(self, sm_id: UUID):

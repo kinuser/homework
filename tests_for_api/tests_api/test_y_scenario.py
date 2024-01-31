@@ -9,7 +9,7 @@ from models import dish_table, get_one_menu, get_all_menus, get_all_submenus, ge
 
 
 @pytest.mark.asyncio(scope='session')
-class TestScenario:
+class TestYScenario:
     async def test_post_menu(self):
         async with AsyncClient() as client:
             r = await client.post(f'http://{APP_HOST}:{APP_PORT}/api/v1/menus', json={

@@ -1,4 +1,4 @@
-"""SQLAlchemy models"""
+"""DB models"""
 import uuid
 
 from sqlalchemy import UUID, Column, ForeignKey, MetaData, String, Table

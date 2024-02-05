@@ -1,7 +1,6 @@
-"""Database init"""
+"""DB actions for testing"""
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-
-from config import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
+from test_config import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
 
 async_engine = create_async_engine(
     f'postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}', echo=False)

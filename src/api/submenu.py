@@ -1,52 +1,55 @@
+"""Module contains submenu API"""
 from uuid import UUID
+
 from fastapi import APIRouter, HTTPException
-from database import Session
-from models import submenu_table
-from repositories.submenu import SubmenuRepository
+
 from schemas import SubmenuSchema
+from uof.uofs import SubmenuUOF
 
 router = APIRouter(
     prefix='/menus',
     tags=['Submenu CRUD']
 )
 
-submenu_repo = SubmenuRepository(submenu_table, Session)
-
-perm_string = '/{menu_id}/submenus'
+PARENT = '/{menu_id}/submenus'
 
 
-@router.get(perm_string)
+@router.get(PARENT)
 async def get_all_submenus(menu_id: UUID):
-    return await submenu_repo.get_all(menu_id)
+    """Get all submenus"""
+    return await SubmenuUOF.get_all(menu_id)
 
 
-@router.get(perm_string + '/{submenu_id}')
-async def get_submenu(menu_id: UUID, submenu_id: UUID):
-    resp = await submenu_repo.get_one(submenu_id)
+@router.get(PARENT + '/{submenu_id}')
+async def get_submenu(menu_id: UUID, submenu_id: UUID) -> dict:
+    """Get one submenu by id"""
+    resp = await SubmenuUOF.get(menu_id, submenu_id)
     if not resp:
         raise HTTPException(status_code=404, detail='submenu not found')
     return resp
 
 
-@router.post(perm_string, status_code=201)
-async def post_submenu(menu_id: UUID, submenu: SubmenuSchema):
-    resp = await submenu_repo.create_one(submenu.model_dump(), menu_id)
+@router.post(PARENT, status_code=201)
+async def post_submenu(menu_id: UUID, submenu: SubmenuSchema) -> dict:
+    """Create one submenu"""
+    resp = await SubmenuUOF.create(menu_id, submenu.model_dump())
     if not resp:
         raise HTTPException(status_code=404, detail='menu not found')
     return resp
 
 
-@router.delete(perm_string + '/{submenu_id}')
-async def delete_submenu(menu_id: UUID, submenu_id: UUID):
-    if await submenu_repo.delete_one(submenu_id):
+@router.delete(PARENT + '/{submenu_id}')
+async def delete_submenu(menu_id: UUID, submenu_id: UUID) -> None:
+    """Delete one submenu"""
+    if await SubmenuUOF.delete(menu_id, submenu_id):
         return
-    else:
-        raise HTTPException(status_code=404, detail='submenu not found')
+    raise HTTPException(status_code=404, detail='submenu not found')
 
 
-@router.patch(perm_string + '/{submenu_id}')
-async def update_submenu(menu_id: UUID, submenu_id: UUID, submenu: SubmenuSchema):
-    resp = await submenu_repo.update_one(submenu.model_dump(), submenu_id)
+@router.patch(PARENT + '/{submenu_id}')
+async def update_submenu(menu_id: UUID, submenu_id: UUID, submenu: SubmenuSchema) -> dict:
+    """Delete one submenu"""
+    resp = await SubmenuUOF.update(menu_id, submenu_id, submenu.model_dump())
     if not resp:
         raise HTTPException(status_code=404, detail='submenu not found')
     return resp

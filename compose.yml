@@ -15,6 +15,8 @@ services:
         depends_on:
             db:
                 condition: service_healthy
+            redis:
+                condition: service_healthy
     db:
         image: postgres:15.1-alpine
         ports:
@@ -26,12 +28,19 @@ services:
             timeout: 3s
             retries: 5
             start_period: 10s
+    redis:
+        image: redis/redis-stack
+        ports:
+            - "6379:6379"
+        healthcheck:
+            test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+            interval: 5s
+            timeout: 3s
+            retries: 5
+            start_period: 3s
     tests:
-        build: ./tests_for_api
+        build: ./tests
         env_file: .env
         depends_on:
             fastapi:
                 condition: service_healthy
-    
-
-    

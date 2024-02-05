@@ -1,0 +1,573 @@
+openapi: 3.1.0
+info:
+  title: FastAPI
+  version: 0.1.0
+paths:
+  /api/v1/menus:
+    get:
+      tags:
+        - Menu CRUD
+      summary: Get All Menus
+      description: Get all menus
+      operationId: get_all_menus_api_v1_menus_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+    post:
+      tags:
+        - Menu CRUD
+      summary: Post Menu
+      description: Create one menu
+      operationId: post_menu_api_v1_menus_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MenuSchema'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/menus/{menu_id}:
+    get:
+      tags:
+        - Menu CRUD
+      summary: Get Menu
+      description: Get one menu by id
+      operationId: get_menu_api_v1_menus__menu_id__get
+      parameters:
+        - name: menu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Menu Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+        - Menu CRUD
+      summary: Delete Menu
+      description: Delete one menu
+      operationId: delete_menu_api_v1_menus__menu_id__delete
+      parameters:
+        - name: menu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Menu Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+        - Menu CRUD
+      summary: Update Menu
+      description: Delete one menu
+      operationId: update_menu_api_v1_menus__menu_id__patch
+      parameters:
+        - name: menu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Menu Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MenuSchema'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/menus/{menu_id}/submenus:
+    get:
+      tags:
+        - Submenu CRUD
+      summary: Get All Submenus
+      description: Get all submenus
+      operationId: get_all_submenus_api_v1_menus__menu_id__submenus_get
+      parameters:
+        - name: menu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Menu Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+        - Submenu CRUD
+      summary: Post Submenu
+      description: Create one submenu
+      operationId: post_submenu_api_v1_menus__menu_id__submenus_post
+      parameters:
+        - name: menu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Menu Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmenuSchema'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/menus/{menu_id}/submenus/{submenu_id}:
+    get:
+      tags:
+        - Submenu CRUD
+      summary: Get Submenu
+      description: Get one submenu by id
+      operationId: get_submenu_api_v1_menus__menu_id__submenus__submenu_id__get
+      parameters:
+        - name: menu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Menu Id
+        - name: submenu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Submenu Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+        - Submenu CRUD
+      summary: Delete Submenu
+      description: Delete one submenu
+      operationId: delete_submenu_api_v1_menus__menu_id__submenus__submenu_id__delete
+      parameters:
+        - name: menu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Menu Id
+        - name: submenu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Submenu Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+        - Submenu CRUD
+      summary: Update Submenu
+      description: Delete one submenu
+      operationId: update_submenu_api_v1_menus__menu_id__submenus__submenu_id__patch
+      parameters:
+        - name: menu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Menu Id
+        - name: submenu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Submenu Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmenuSchema'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes:
+    get:
+      tags:
+        - Dish CRUD
+      summary: Get All Dishes
+      description: Get all dishes
+      operationId: get_all_dishes_api_v1_menus__menu_id__submenus__submenu_id__dishes_get
+      parameters:
+        - name: menu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Menu Id
+        - name: submenu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Submenu Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+        - Dish CRUD
+      summary: Post Dish
+      description: Create one dish
+      operationId: post_dish_api_v1_menus__menu_id__submenus__submenu_id__dishes_post
+      parameters:
+        - name: menu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Menu Id
+        - name: submenu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Submenu Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DishSchema'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}:
+    get:
+      tags:
+        - Dish CRUD
+      summary: Get Dish
+      description: Get one dish by id
+      operationId: >-
+        get_dish_api_v1_menus__menu_id__submenus__submenu_id__dishes__dish_id__get
+      parameters:
+        - name: menu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Menu Id
+        - name: submenu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Submenu Id
+        - name: dish_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Dish Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+        - Dish CRUD
+      summary: Delete Dish
+      description: Delete one dish
+      operationId: >-
+        delete_dish_api_v1_menus__menu_id__submenus__submenu_id__dishes__dish_id__delete
+      parameters:
+        - name: menu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Menu Id
+        - name: submenu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Submenu Id
+        - name: dish_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Dish Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+        - Dish CRUD
+      summary: Update Dish
+      description: Delete one dish
+      operationId: >-
+        update_dish_api_v1_menus__menu_id__submenus__submenu_id__dishes__dish_id__patch
+      parameters:
+        - name: menu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Menu Id
+        - name: submenu_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Submenu Id
+        - name: dish_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Dish Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DishSchema'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    DishSchema:
+      properties:
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+        price:
+          type: string
+          title: Price
+      type: object
+      required:
+        - title
+        - description
+        - price
+      title: DishSchema
+      description: Dish input schema
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    MenuSchema:
+      properties:
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+      type: object
+      required:
+        - title
+        - description
+      title: MenuSchema
+      description: Menu input schema
+    SubmenuSchema:
+      properties:
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+      type: object
+      required:
+        - title
+        - description
+      title: SubmenuSchema
+      description: Submenu input schema
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+      title: ValidationError

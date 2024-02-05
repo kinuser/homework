@@ -1,8 +1,9 @@
+"""Module connects routers to app"""
 from fastapi import APIRouter
+
+from api.dish import router as dish_router
 from api.menu import router as menu_router
 from api.submenu import router as submenu_router
-from api.dish import router as dish_router
-
 
 main_router = APIRouter(
     prefix='/api/v1'

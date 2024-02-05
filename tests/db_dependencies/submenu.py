@@ -1,12 +1,11 @@
 """Module contains submenu repository"""
 from uuid import UUID
 
+from db_dependencies.models import dish_table, submenu_table
 from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import Select
-
-from models import dish_table, submenu_table
 
 
 def get_all_submenu(sm_id: UUID) -> Select:

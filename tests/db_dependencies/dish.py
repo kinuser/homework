@@ -2,11 +2,10 @@
 
 from uuid import UUID
 
+from db_dependencies.models import dish_table
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from models import dish_table
 
 
 # noinspection PyProtectedMember
@@ -24,6 +23,7 @@ class DishRepository:
         stmt = insert(dish_table).values(**value).returning(dish_table)
         try:
             result = await self.s.execute(stmt)
+            await self.s.commit()
             return result.first()._asdict()
         except IntegrityError:
             return None
@@ -48,6 +48,7 @@ class DishRepository:
         stmt = delete(dish_table).where(dish_table.c.id == d_id)
         try:
             await self.s.execute(stmt)
+            await self.s.commit()
             return True
         except IntegrityError:
             return None
@@ -59,6 +60,7 @@ class DishRepository:
                 .returning(dish_table)
                 )
         result = await self.s.execute(stmt)
+        await self.s.commit()
         try:
             return result.first()._asdict()
         except IntegrityError:

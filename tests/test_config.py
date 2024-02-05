@@ -1,4 +1,6 @@
+"""Environment variables"""
 import os
+
 import dotenv
 
 dotenv.load_dotenv()
@@ -10,3 +12,5 @@ DB_PORT = os.environ.get('DB_PORT')
 DB_NAME = os.environ.get('DB_NAME')
 DB_USER = os.environ.get('DB_USER')
 DB_PASS = os.environ.get('DB_PASS')
+RED_PORT = os.environ.get('RED_PORT')
+RED_HOST = os.environ.get('RED_HOST')

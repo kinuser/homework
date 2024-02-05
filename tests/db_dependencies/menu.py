@@ -2,12 +2,11 @@
 
 from uuid import UUID
 
+from db_dependencies.models import dish_table, menu_table, submenu_table
 from sqlalchemy import Integer, cast, delete, func, insert, select, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import Select
-
-from models import dish_table, menu_table, submenu_table
 
 
 def get_one_menu(m_id: UUID) -> Select:
@@ -93,6 +92,7 @@ def get_all_menus() -> Select:
     return get_all_menu
 
 
+# noinspection PyProtectedMember
 class MenuRepository:
     """Menu repository for SQL DB"""
 
@@ -126,6 +126,7 @@ class MenuRepository:
         stmt = delete(menu_table).filter_by(id=sm_id)
         try:
             await self.s.execute(stmt)
+            await self.s.commit()
             return True
         except IntegrityError:
             return None

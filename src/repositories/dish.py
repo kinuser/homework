@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models import dish_table
+from schemas import DishSchema, OutputDishSchema
 
 
 # noinspection PyProtectedMember
@@ -17,29 +18,32 @@ class DishRepository:
         self.s = session
 
     async def create_one(
-            self, value: dict,
-            sm_id: UUID) -> dict | None:
+            self, dish: DishSchema,
+            sm_id: UUID) -> OutputDishSchema | None:
         """Create one dish record"""
-        value['submenu_id'] = sm_id
-        stmt = insert(dish_table).values(**value).returning(dish_table)
+        dish = dish.model_dump()
+        dish['submenu_id'] = sm_id
+        stmt = insert(dish_table).values(**dish).returning(dish_table)
         try:
             result = await self.s.execute(stmt)
-            return result.first()._asdict()
+            return OutputDishSchema(**result.first()._asdict())
         except IntegrityError:
             return None
 
-    async def get_all(self, sm_id: UUID) -> list[dict]:
+    async def get_all(self, sm_id: UUID) -> list[OutputDishSchema]:
         """Get all dishes"""
         query = select(dish_table).where(dish_table.c.submenu_id == sm_id)
-        result = await self.s.execute(query)
-        return [x._asdict() for x in result.all()]
+        result = (await self.s.execute(query)).all()
+        if len(result) > 0:
+            return [OutputDishSchema(**x._asdict()) for x in result]
+        return []
 
-    async def get_one(self, d_id: UUID) -> dict | None:
+    async def get_one(self, d_id: UUID) -> OutputDishSchema | None:
         """Get one dish"""
         query = select(dish_table).filter_by(id=d_id)
         try:
             result = await self.s.execute(query)
-            return result.first()._asdict()
+            return OutputDishSchema(**result.first()._asdict())
         except (NoResultFound, AttributeError):
             return None
 
@@ -52,14 +56,14 @@ class DishRepository:
         except IntegrityError:
             return None
 
-    async def update_one(self, value: dict, d_id: UUID) -> dict | None:
+    async def update_one(self, dish: DishSchema, d_id: UUID) -> OutputDishSchema | None:
         """Update one dish"""
-        stmt = (update(dish_table).values(**value)
+        stmt = (update(dish_table).values(**dish.model_dump())
                 .where(dish_table.c.id == d_id)
                 .returning(dish_table)
                 )
         result = await self.s.execute(stmt)
         try:
-            return result.first()._asdict()
+            return OutputDishSchema(**result.first()._asdict())
         except IntegrityError:
             return None

@@ -7,6 +7,7 @@ paths:
     get:
       tags:
         - Menu CRUD
+        - get
       summary: Get All Menus
       description: Get all menus
       operationId: get_all_menus_api_v1_menus_get
@@ -15,10 +16,15 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                items:
+                  $ref: '#/components/schemas/OutputMenuSchema'
+                type: array
+                title: Response Get All Menus Api V1 Menus Get
     post:
       tags:
         - Menu CRUD
+        - post
       summary: Post Menu
       description: Create one menu
       operationId: post_menu_api_v1_menus_post
@@ -33,7 +39,8 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/OutputMenuSchema'
         '422':
           description: Validation Error
           content:
@@ -44,6 +51,7 @@ paths:
     get:
       tags:
         - Menu CRUD
+        - get
       summary: Get Menu
       description: Get one menu by id
       operationId: get_menu_api_v1_menus__menu_id__get
@@ -60,7 +68,14 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/OutputMenuSchema'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionS'
+          description: Not Found
         '422':
           description: Validation Error
           content:
@@ -70,6 +85,7 @@ paths:
     delete:
       tags:
         - Menu CRUD
+        - delete
       summary: Delete Menu
       description: Delete one menu
       operationId: delete_menu_api_v1_menus__menu_id__delete
@@ -87,6 +103,12 @@ paths:
           content:
             application/json:
               schema: {}
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionS'
+          description: Not Found
         '422':
           description: Validation Error
           content:
@@ -96,6 +118,7 @@ paths:
     patch:
       tags:
         - Menu CRUD
+        - patch
       summary: Update Menu
       description: Delete one menu
       operationId: update_menu_api_v1_menus__menu_id__patch
@@ -118,7 +141,14 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/OutputMenuSchema'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionS'
+          description: Not Found
         '422':
           description: Validation Error
           content:
@@ -129,6 +159,7 @@ paths:
     get:
       tags:
         - Submenu CRUD
+        - get
       summary: Get All Submenus
       description: Get all submenus
       operationId: get_all_submenus_api_v1_menus__menu_id__submenus_get
@@ -145,7 +176,11 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OutputSubmenuSchema'
+                title: Response Get All Submenus Api V1 Menus  Menu Id  Submenus Get
         '422':
           description: Validation Error
           content:
@@ -155,6 +190,7 @@ paths:
     post:
       tags:
         - Submenu CRUD
+        - post
       summary: Post Submenu
       description: Create one submenu
       operationId: post_submenu_api_v1_menus__menu_id__submenus_post
@@ -177,7 +213,14 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/OutputSubmenuSchema'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionS'
+          description: Not Found
         '422':
           description: Validation Error
           content:
@@ -188,6 +231,7 @@ paths:
     get:
       tags:
         - Submenu CRUD
+        - get
       summary: Get Submenu
       description: Get one submenu by id
       operationId: get_submenu_api_v1_menus__menu_id__submenus__submenu_id__get
@@ -211,7 +255,14 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/OutputSubmenuSchema'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionS'
+          description: Not Found
         '422':
           description: Validation Error
           content:
@@ -221,6 +272,7 @@ paths:
     delete:
       tags:
         - Submenu CRUD
+        - delete
       summary: Delete Submenu
       description: Delete one submenu
       operationId: delete_submenu_api_v1_menus__menu_id__submenus__submenu_id__delete
@@ -245,6 +297,12 @@ paths:
           content:
             application/json:
               schema: {}
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionS'
+          description: Not Found
         '422':
           description: Validation Error
           content:
@@ -254,6 +312,7 @@ paths:
     patch:
       tags:
         - Submenu CRUD
+        - patch
       summary: Update Submenu
       description: Delete one submenu
       operationId: update_submenu_api_v1_menus__menu_id__submenus__submenu_id__patch
@@ -283,7 +342,14 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/OutputSubmenuSchema'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionS'
+          description: Not Found
         '422':
           description: Validation Error
           content:
@@ -294,6 +360,7 @@ paths:
     get:
       tags:
         - Dish CRUD
+        - get
       summary: Get All Dishes
       description: Get all dishes
       operationId: get_all_dishes_api_v1_menus__menu_id__submenus__submenu_id__dishes_get
@@ -317,7 +384,13 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OutputDishSchema'
+                title: >-
+                  Response Get All Dishes Api V1 Menus  Menu Id  Submenus
+                  Submenu Id  Dishes Get
         '422':
           description: Validation Error
           content:
@@ -327,6 +400,7 @@ paths:
     post:
       tags:
         - Dish CRUD
+        - post
       summary: Post Dish
       description: Create one dish
       operationId: post_dish_api_v1_menus__menu_id__submenus__submenu_id__dishes_post
@@ -356,7 +430,14 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/OutputDishSchema'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionS'
+          description: Not Found
         '422':
           description: Validation Error
           content:
@@ -367,6 +448,7 @@ paths:
     get:
       tags:
         - Dish CRUD
+        - get
       summary: Get Dish
       description: Get one dish by id
       operationId: >-
@@ -398,7 +480,14 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/OutputDishSchema'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionS'
+          description: Not Found
         '422':
           description: Validation Error
           content:
@@ -408,6 +497,7 @@ paths:
     delete:
       tags:
         - Dish CRUD
+        - delete
       summary: Delete Dish
       description: Delete one dish
       operationId: >-
@@ -440,6 +530,12 @@ paths:
           content:
             application/json:
               schema: {}
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionS'
+          description: Not Found
         '422':
           description: Validation Error
           content:
@@ -449,6 +545,7 @@ paths:
     patch:
       tags:
         - Dish CRUD
+        - patch
       summary: Update Dish
       description: Delete one dish
       operationId: >-
@@ -486,7 +583,14 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/OutputDishSchema'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionS'
+          description: Not Found
         '422':
           description: Validation Error
           content:
@@ -513,6 +617,15 @@ components:
         - price
       title: DishSchema
       description: Dish input schema
+    ExceptionS:
+      properties:
+        detail:
+          type: string
+          title: Detail
+      type: object
+      required:
+        - detail
+      title: ExceptionS
     HTTPValidationError:
       properties:
         detail:
@@ -536,6 +649,89 @@ components:
         - description
       title: MenuSchema
       description: Menu input schema
+    OutputDishSchema:
+      properties:
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+        price:
+          type: string
+          title: Price
+        id:
+          type: string
+          format: uuid
+          title: Id
+        submenu_id:
+          type: string
+          format: uuid
+          title: Submenu Id
+      type: object
+      required:
+        - title
+        - description
+        - price
+        - id
+        - submenu_id
+      title: OutputDishSchema
+      description: Dish output schema
+    OutputMenuSchema:
+      properties:
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+        id:
+          type: string
+          format: uuid
+          title: Id
+        submenus_count:
+          type: integer
+          title: Submenus Count
+        dishes_count:
+          type: integer
+          title: Dishes Count
+      type: object
+      required:
+        - title
+        - description
+        - id
+        - submenus_count
+        - dishes_count
+      title: OutputMenuSchema
+      description: Menu output schema
+    OutputSubmenuSchema:
+      properties:
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+        id:
+          type: string
+          format: uuid
+          title: Id
+        dishes_count:
+          type: integer
+          title: Dishes Count
+        menu_id:
+          type: string
+          format: uuid
+          title: Menu Id
+      type: object
+      required:
+        - title
+        - description
+        - id
+        - dishes_count
+        - menu_id
+      title: OutputSubmenuSchema
+      description: Submenu output schema
     SubmenuSchema:
       properties:
         title:

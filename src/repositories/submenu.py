@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import Select
 
 from models import dish_table, submenu_table
+from schemas import OutputSubmenuSchema, SubmenuSchema
 
 
 def get_all_submenu(sm_id: UUID) -> Select:
@@ -52,12 +53,13 @@ class SubmenuRepository:
     def __init__(self, session: AsyncSession):
         self.s = session
 
-    async def create_one(self, value: dict, m_id: UUID) -> dict | None:
+    async def create_one(self, submenu: SubmenuSchema, m_id: UUID) -> OutputSubmenuSchema | None:
         """Get one submenu"""
-        value['menu_id'] = m_id
+        submenu = submenu.model_dump()
+        submenu['menu_id'] = m_id
         stmt = (
             insert(submenu_table)
-            .values(**value)
+            .values(**submenu)
             .returning(submenu_table.c.id)
         )
         try:
@@ -67,20 +69,22 @@ class SubmenuRepository:
                 .first()
                 ._asdict()
             )
-            return result
+            return OutputSubmenuSchema(**result)
         except IntegrityError:
             return None
 
-    async def get_all(self, m_id: UUID) -> list[dict] | None:
+    async def get_all(self, m_id: UUID) -> list[OutputSubmenuSchema] | None:
         """Get all submenus"""
-        result = await self.s.execute(get_all_submenu(m_id))
-        return [x._asdict() for x in result.unique().all()]
+        result = (await self.s.execute(get_all_submenu(m_id))).unique().all()
+        if len(result) > 0:
+            return [OutputSubmenuSchema(**x._asdict()) for x in result]
+        return []
 
-    async def get_one(self, sm_id: UUID) -> dict | None:
+    async def get_one(self, sm_id: UUID) -> OutputSubmenuSchema | None:
         """Get one submenu"""
         try:
             result = await self.s.execute(get_one_submenu(sm_id))
-            return result.first()._asdict()
+            return OutputSubmenuSchema(**result.first()._asdict())
         except (NoResultFound, AttributeError):
             return None
 
@@ -93,9 +97,9 @@ class SubmenuRepository:
         except IntegrityError:
             return None
 
-    async def update_one(self, value: dict, sm_id: UUID) -> dict | None:
+    async def update_one(self, value: SubmenuSchema, sm_id: UUID) -> OutputSubmenuSchema | None:
         """Update one submenu"""
-        stmt = (update(submenu_table).values(**value).filter_by(id=sm_id)
+        stmt = (update(submenu_table).values(**value.model_dump()).filter_by(id=sm_id)
                 .returning(submenu_table.c.id))
         try:
             dict_id = (await self.s.execute(stmt)).first()._asdict()
@@ -104,6 +108,6 @@ class SubmenuRepository:
                 .first()
                 ._asdict()
             )
-            return result
+            return OutputSubmenuSchema(**result)
         except IntegrityError:
             return None

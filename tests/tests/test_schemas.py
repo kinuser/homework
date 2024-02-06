@@ -30,10 +30,10 @@ class OutputSubmenuSchema(SubmenuSchema):
     """Submenu output schema"""
     id: uuid.UUID
     dishes_count: int
-    # menu_id: uuid.UUID
+    menu_id: uuid.UUID
 
 
 class OutputDishSchema(DishSchema):
     """Dish output schema"""
     id: uuid.UUID
-    # submenu_id: uuid.UUID
+    submenu_id: uuid.UUID

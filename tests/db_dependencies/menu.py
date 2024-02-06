@@ -8,6 +8,8 @@ from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import Select
 
+from tests.test_schemas import MenuSchema, OutputMenuSchema
+
 
 def get_one_menu(m_id: UUID) -> Select:
     """Get complex ORM statement for getting one menu with all child counters"""
@@ -92,32 +94,33 @@ def get_all_menus() -> Select:
     return get_all_menu
 
 
-# noinspection PyProtectedMember
 class MenuRepository:
     """Menu repository for SQL DB"""
 
     def __init__(self, session: AsyncSession):
         self.s = session
 
-    async def create_one(self, value: dict) -> dict:
+    async def create_one(self, menu: MenuSchema) -> OutputMenuSchema:
         """Create one menu"""
-        stmt = insert(menu_table).values(**value).returning(menu_table.c.id)
+        stmt = insert(menu_table).values(**menu.model_dump()).returning(menu_table.c.id)
         dict_id: dict = (await self.s.execute(stmt)).first()._asdict()
         result: dict = (await self.s.execute(get_one_menu(dict_id['id']))).first()._asdict()
-        return result
+        return OutputMenuSchema(**result)
 
-    async def get_all(self) -> list[dict]:
+    async def get_all(self) -> list[OutputMenuSchema]:
         """Get all menus"""
         query = get_all_menus()
         result = (await self.s.execute(query)).all()
-        return [x._asdict() for x in result]
+        if len(result) > 0:
+            return [OutputMenuSchema(**x._asdict()) for x in result]
+        return []
 
-    async def get_one(self, sm_id: UUID) -> dict | None:
+    async def get_one(self, sm_id: UUID) -> OutputMenuSchema | None:
         """Get one menu"""
         query = get_one_menu(sm_id)
         try:
             result = await self.s.execute(query)
-            return result.one()._asdict()
+            return OutputMenuSchema(**result.one()._asdict())
         except (NoResultFound, AttributeError):
             return None
 
@@ -126,20 +129,19 @@ class MenuRepository:
         stmt = delete(menu_table).filter_by(id=sm_id)
         try:
             await self.s.execute(stmt)
-            await self.s.commit()
             return True
         except IntegrityError:
             return None
 
-    async def update_one(self, sm_id: UUID, value: dict) -> dict | None:
+    async def update_one(self, sm_id: UUID, menu: MenuSchema) -> OutputMenuSchema | None:
         """Update one menu"""
         stmt = (update(menu_table)
-                .values(**value)
+                .values(**menu.model_dump())
                 .where(menu_table.c.id == sm_id)
                 .returning(menu_table.c.id))
         try:
             dict_id = (await self.s.execute(stmt)).first()._asdict()
             result = (await self.s.execute(get_one_menu(dict_id['id']))).first()._asdict()
-            return result
+            return OutputMenuSchema(**result)
         except (IntegrityError, AttributeError):
             return None

@@ -1,9 +1,13 @@
 """Test scenario for checking counters"""
 import pytest
 from db_dependencies.database import Session
-from db_dependencies.menu import get_all_menus, get_one_menu
-from db_dependencies.models import dish_table
-from db_dependencies.submenu import get_all_submenu, get_one_submenu
+from db_dependencies.models import (
+    dish_table,
+    get_all_menus,
+    get_all_submenus,
+    get_one_menu,
+    get_one_submenu,
+)
 from httpx import AsyncClient
 from sqlalchemy import select
 from utils import reverse
@@ -18,7 +22,7 @@ class TestYScenario:
     async def test_post_menu(self):
         """Create menu"""
         async with AsyncClient() as client:
-            r = await client.post(reverse('menu'), json={
+            r = await client.post(reverse('post_menu'), json={
                 'title': 'My menu 1',
                 'description': 'My menu description 1'
             })
@@ -34,7 +38,7 @@ class TestYScenario:
     async def test_post_submenu(self):
         """Create submenu"""
         async with AsyncClient() as client:
-            r = await client.post(reverse('submenu', MenuStore.litem.id), json={
+            r = await client.post(reverse('post_submenu', MenuStore.litem.id), json={
                 'title': 'My submenu 1',
                 'description': 'My submenu description 1'
             })
@@ -53,7 +57,7 @@ class TestYScenario:
         """Create dish"""
         async with AsyncClient() as client:
             r = await client.post(
-                reverse('dish', MenuStore.litem.id, SubmenuStore.litem.id),
+                reverse('post_dish', MenuStore.litem.id, SubmenuStore.litem.id),
                 json={
                     'title': 'My dish 1',
                     'description': 'My dish description 1',
@@ -74,7 +78,7 @@ class TestYScenario:
         """Create dish 2"""
         async with AsyncClient() as client:
             r = await client.post(
-                reverse('dish', MenuStore.litem.id, SubmenuStore.litem.id),
+                reverse('post_dish', MenuStore.litem.id, SubmenuStore.litem.id),
                 json={
                     'title': 'My dish 2',
                     'description': 'My dish description 2',
@@ -94,7 +98,7 @@ class TestYScenario:
     async def test_get_menu(self):
         """Get menu"""
         async with AsyncClient() as client:
-            r = await client.get(reverse('menu', MenuStore.litem.id))
+            r = await client.get(reverse('get_menu', MenuStore.litem.id))
             assert r.status_code == 200
             item = OutputMenuSchema(**r.json())
             assert item.id == MenuStore.litem.id
@@ -109,7 +113,7 @@ class TestYScenario:
     async def test_get_one_sub(self):
         """Get submenu"""
         async with AsyncClient() as client:
-            r = await client.get(reverse('submenu', MenuStore.litem.id, SubmenuStore.litem.id))
+            r = await client.get(reverse('get_submenu', MenuStore.litem.id, SubmenuStore.litem.id))
             assert r.status_code == 200
             item = OutputSubmenuSchema(**r.json())
             assert item.id == SubmenuStore.litem.id
@@ -123,7 +127,7 @@ class TestYScenario:
     async def test_delete_one_sub(self):
         """Delete one submenu"""
         async with AsyncClient() as client:
-            r = await client.delete(reverse('submenu', MenuStore.litem.id, SubmenuStore.litem.id))
+            r = await client.delete(reverse('delete_submenu', MenuStore.litem.id, SubmenuStore.litem.id))
             assert r.status_code == 200
         async with Session() as s:
             result = await s.execute(get_one_submenu(SubmenuStore.litem.id))
@@ -132,17 +136,17 @@ class TestYScenario:
     async def test_get_all_sub_deleted(self):
         """Get empty submenus list"""
         async with AsyncClient() as client:
-            r = await client.get(reverse('submenu', MenuStore.litem.id))
+            r = await client.get(reverse('get_all_submenus', MenuStore.litem.id))
             assert r.status_code == 200
             assert r.json() == []
         async with Session() as s:
-            result = await s.execute(get_all_submenu(MenuStore.litem.id))
+            result = await s.execute(get_all_submenus(MenuStore.litem.id))
             assert result.all() == []
 
     async def test_get_all_dish_deleted(self):
         """Get empty dishes list"""
         async with AsyncClient() as client:
-            r = await client.get(reverse('dish', MenuStore.litem.id, SubmenuStore.litem.id))
+            r = await client.get(reverse('get_all_dishes', MenuStore.litem.id, SubmenuStore.litem.id))
             assert r.status_code == 200
             assert r.json() == []
         async with Session() as s:
@@ -154,7 +158,7 @@ class TestYScenario:
     async def test_get_one_menu(self):
         """Get 1 menu"""
         async with AsyncClient() as client:
-            r = await client.get(reverse('menu', MenuStore.litem.id))
+            r = await client.get(reverse('get_menu', MenuStore.litem.id))
             assert r.status_code == 200
             item = OutputMenuSchema(**r.json())
             assert item.id == MenuStore.litem.id
@@ -169,7 +173,7 @@ class TestYScenario:
     async def test_delete_one_menu(self):
         """Delete menu"""
         async with AsyncClient() as client:
-            r = await client.delete(reverse('menu', MenuStore.litem.id))
+            r = await client.delete(reverse('delete_menu', MenuStore.litem.id))
             assert r.status_code == 200
         async with Session() as s:
             result = await s.execute(get_one_menu(MenuStore.litem.id))
@@ -179,7 +183,7 @@ class TestYScenario:
     async def test_get_all_menu_empty(self):
         """Get empty list"""
         async with AsyncClient() as client:
-            r = await client.get(reverse('menu'))
+            r = await client.get(reverse('get_all_menus'))
             assert r.status_code == 200
             assert r.json() == []
         async with Session() as s:

@@ -10,7 +10,7 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from utils import reverse
 
-from tests.test_schemas import OutputDishSchema
+from tests.test_schemas import DishSchema, OutputDishSchema
 from tests.test_y_menu_crud import create_menu, delete_menu
 from tests.test_y_submenu_crud import create_submenu
 
@@ -23,16 +23,16 @@ async def create_dish(m_id: UUID, sm_id: UUID) -> OutputDishSchema | None:
         'price': '10.00',
         'submenu_id': sm_id
     }
-    resp = await DishesUOF.create(m_id, sm_id, values)
+    resp = await DishesUOF.create(m_id, sm_id, DishSchema(**values))
     if resp:
-        return OutputDishSchema(**resp)
+        return resp
     return None
 
 
 async def get_cache_d(m_id: UUID, sm_id: UUID, d_id: UUID):
     """Get dish from cache"""
     resp = await DishRedisRepo.get(m_id, sm_id, d_id)
-    return OutputDishSchema(**resp)
+    return resp
 
 
 @pytest.mark.asyncio(scope='session')
@@ -47,7 +47,7 @@ class TestYDishCrud:
         submenu = await create_submenu(menu.id)
         async with AsyncClient() as client:
             r = await client.post(
-                reverse('dish', menu.id, submenu.id),
+                reverse('post_dish', menu.id, submenu.id),
                 json={
                     'title': 'My dish',
                     'description': 'My dish description',
@@ -73,7 +73,7 @@ class TestYDishCrud:
         dish = await create_dish(menu.id, submenu.id)
         async with AsyncClient() as client:
             r = await client.get(
-                reverse('dish', menu.id, submenu.id, dish.id)
+                reverse('get_dish', menu.id, submenu.id, dish.id)
             )
             assert r.status_code == 200
             item = OutputDishSchema(**r.json())
@@ -97,11 +97,11 @@ class TestYDishCrud:
                 OutputDishSchema(**x._asdict()) for x in result.all()
             ]
             cache_obj_list = [
-                OutputDishSchema(**x) for x in await DishRedisRepo.get_all(menu.id, submenu.id)
+                x for x in await DishRedisRepo.get_all(menu.id, submenu.id)
             ]
         async with AsyncClient() as client:
             r = await client.get(
-                reverse('dish', menu.id, submenu.id)
+                reverse('get_all_dishes', menu.id, submenu.id)
             )
             assert r.status_code == 200
             items_list = [OutputDishSchema(**x) for x in r.json()]
@@ -118,7 +118,7 @@ class TestYDishCrud:
         dish = await create_dish(menu.id, submenu.id)
         async with AsyncClient() as client:
             r = await client.patch(
-                reverse('dish', menu.id, submenu.id, dish.id),
+                reverse('update_dish', menu.id, submenu.id, dish.id),
                 json={
                     'title': 'My updated dish',
                     'description': 'My updated dish description',
@@ -145,7 +145,7 @@ class TestYDishCrud:
         dish = await create_dish(menu.id, submenu.id)
         async with AsyncClient() as client:
             r = await client.delete(
-                reverse('dish', menu.id, submenu.id, dish.id)
+                reverse('delete_dish', menu.id, submenu.id, dish.id)
             )
             assert r.status_code == 200
         async with Session() as s:

@@ -37,3 +37,7 @@ class OutputDishSchema(DishSchema):
     """Dish output schema"""
     id: uuid.UUID
     submenu_id: uuid.UUID
+
+
+class ExceptionS(BaseModel):
+    detail: str

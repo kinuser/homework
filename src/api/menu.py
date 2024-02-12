@@ -4,7 +4,7 @@ import uuid
 from fastapi import APIRouter, HTTPException
 
 from schemas import ExceptionS, MenuSchema, OutputMenuSchema
-from uof.uofs import MenuUOF
+from uof.uofs import AllUOF, MenuUOF
 
 router = APIRouter(
     prefix='/menus',

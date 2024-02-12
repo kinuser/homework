@@ -2,11 +2,13 @@
 
 from uuid import UUID
 
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import delete, select, update
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models import dish_table
+from my_celery.schemas import DishSchemaTable
 from schemas import DishSchema, OutputDishSchema
 
 
@@ -67,3 +69,38 @@ class DishRepository:
             return OutputDishSchema(**result.first()._asdict())
         except IntegrityError:
             return None
+
+    async def get_everything(self):
+        """Get all table"""
+        query = select(dish_table)
+        result = (await self.s.execute(query)).all()
+        if len(result) > 0:
+            return [OutputDishSchema(**x._asdict()) for x in result]
+        return []
+
+    async def synchronize(self, menu_list: list[DishSchemaTable]) -> bool:
+        """Synchronize SQL table with """
+        current_state = await self.get_everything()
+        # Check for delete
+        for x in current_state:
+            answer = False
+            for n in menu_list:
+                if x.id == n.id:
+                    answer = True
+            if answer is False:
+                await self.delete_one(x.id)
+        # Insert or update
+        stmt = (
+            insert(dish_table)
+            .values([x.model_dump() for x in menu_list])
+        )
+        do_update_stmt = stmt.on_conflict_do_update(
+            index_elements=['id'],
+            set_={
+                'title': stmt.excluded.title,
+                'description': stmt.excluded.description
+            }
+        )
+        await self.s.execute(do_update_stmt)
+
+        return True

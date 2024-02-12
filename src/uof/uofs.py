@@ -1,11 +1,15 @@
 """Classes for synchronization between Redis and SQL Database"""
 from uuid import UUID
 
+from sqlalchemy import select
+
 from database import Session
+from models import dish_table, menu_table, submenu_table
+from my_celery.schemas import DishSchemaTable, MenuSchemaTable, SubmenuSchemaTable
 from repositories.dish import DishRepository
-from repositories.menu import MenuRepository
+from repositories.menu import MenuRepository, get_all_menus, get_all_menus_cte
 from repositories.redis_repos import DishRedisRepo, MenuRedisRepo, SubmenuRedisRepo
-from repositories.submenu import SubmenuRepository
+from repositories.submenu import SubmenuRepository, get_all_submenu, get_every_submenu
 from schemas import (
     DishSchema,
     MenuSchema,
@@ -212,3 +216,82 @@ class DishesUOF:
                 print('Synchronization error from update submenu')
                 return None
             return None
+
+
+class AllUOF:
+    """Class represents actions between al entities of db"""
+    @classmethod
+    async def synchronize_gsheet(
+            cls,
+            menu_list: list[MenuSchemaTable],
+            submenu_list: list[SubmenuSchemaTable],
+            dish_list: list[DishSchemaTable],
+    ):
+        """Synchronize all SQLDatabase with external values"""
+        async with Session() as s:
+            menu_r = MenuRepository(s)
+            submenu_r = SubmenuRepository(s)
+            dish_r = DishRepository(s)
+            await menu_r.synchronize(menu_list)
+            await submenu_r.synchronize(submenu_list)
+            await dish_r.synchronize(dish_list)
+            await s.commit()
+
+    @classmethod
+    async def get_everything(cls):
+        """Get everything from database with complex ORM query"""
+        menu_cte = get_all_menus_cte()
+        submenu_cte = get_every_submenu().cte()
+        query = (
+            select(
+                menu_cte,
+                submenu_cte,
+                dish_table)
+            .join_from(menu_cte, submenu_cte, menu_cte.c.id == submenu_cte.c.menu_id)
+            .join_from(submenu_cte, dish_table, submenu_table.c.id == dish_table.c.submenu_id)
+        )
+        async with Session() as s:
+            res = (await s.execute(query)).all()
+            all_list = [x._asdict() for x in res]
+            print(all_list)
+            print(len(all_list))
+            # menu_list = []
+            # # Find all menus
+            # for i in all_list:
+            #     menu: dict = {}
+            #     for key, value in i.items():
+            #         if key in ('title', 'description', 'id'):
+            #             menu[key] = value
+            #     menu_list.append(menu)
+            # menu_list = [dict(t) for t in {tuple(d.items()) for d in menu_list}]
+            # # Find all submenus
+            # submenu_list = []
+            # for i in all_list:
+            #     submenu: dict = {}
+            #     for key, value in i.items():
+            #         if key in ('title_1', 'description_1', 'id_1', 'menu_id'):
+            #             submenu[key] = value
+            #     submenu_list.append(submenu)
+            # submenu_list = [dict(t) for t in {tuple(d.items()) for d in submenu_list}]
+            # # Find all dishes
+            # dishes_list = []
+            # for i in all_list:
+            #     dish: dict = {}
+            #     for key, value in i.items():
+            #         if key in ('title_2', 'description_2', 'id_2', 'submenu_id', 'price'):
+            #             dish[key] = value
+            #     dishes_list.append(dish)
+            # # Unite three lists
+            # for submenu in submenu_list:
+            #     submenu['dishes'] = []
+            # for menu in menu_list:
+            #     menu['submenus'] = []
+            # for dish in dishes_list:
+            #     for submenu in submenu_list:
+            #         if dish['submenu_id'] == submenu['id_1']:
+            #             submenu['dishes'].append(dish)
+            # for submenu in submenu_list:
+            #     for menu in menu_list:
+            #         if submenu['menu_id'] == menu['id']:
+            #             menu['submenus'].append(submenu)
+            # return menu_list

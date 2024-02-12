@@ -1,14 +1,34 @@
 """Module contains submenu repository"""
 from uuid import UUID
 
-from sqlalchemy import delete, func, insert, select, update
+from sqlalchemy import delete, func, select, update
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import Select
 
 from models import dish_table, submenu_table
+from my_celery.schemas import SubmenuSchemaTable
 from schemas import OutputSubmenuSchema, SubmenuSchema
 
+
+def get_every_submenu() -> Select:
+    """
+    Get complex ORM statement for getting
+    all submenus with all child counters
+    """
+    query = (
+        select(
+            submenu_table,
+            func.count(dish_table.c.id).label('dishes_count')
+        )
+        .outerjoin(
+            dish_table,
+            dish_table.c.submenu_id == submenu_table.c.id
+        )
+        .group_by(submenu_table.c.id)
+    )
+    return query
 
 def get_all_submenu(sm_id: UUID) -> Select:
     """
@@ -111,3 +131,40 @@ class SubmenuRepository:
             return OutputSubmenuSchema(**result)
         except IntegrityError:
             return None
+
+    async def get_everything(self):
+        """Get all table"""
+        query = select(submenu_table)
+        result = (
+            await self.s.execute(query)
+        ).unique().all()
+        if len(result) > 0:
+            return [OutputSubmenuSchema(**x._asdict(), dishes_count=0) for x in result]
+        return []
+
+    async def synchronize(self, menu_list: list[SubmenuSchemaTable]) -> bool:
+        """Synchronize SQL table with """
+        current_state = await self.get_everything()
+        # Check for delete
+        for x in current_state:
+            answer = False
+            for n in menu_list:
+                if x.id == n.id:
+                    answer = True
+            if answer is False:
+                await self.delete_one(x.id)
+        # Insert or update
+        stmt = (
+            insert(submenu_table)
+            .values([x.model_dump() for x in menu_list])
+        )
+        do_update_stmt = stmt.on_conflict_do_update(
+            index_elements=['id'],
+            set_={
+                'title': stmt.excluded.title,
+                'description': stmt.excluded.description
+            }
+        )
+        await self.s.execute(do_update_stmt)
+
+        return True

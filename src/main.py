@@ -10,6 +10,7 @@ from api.router import main_router as router
 from config import RED_HOST, RED_PORT
 from database import async_engine
 from models import metadata
+from my_celery.parser import get_and_parse
 
 
 @asynccontextmanager
@@ -20,6 +21,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     if RED_HOST and RED_PORT:
         c = redis.Redis(host=RED_HOST, port=int(RED_PORT), decode_responses=True)
         c.json().set('menus', '$', [])
+        get_and_parse.delay()
     yield
     async with async_engine.begin() as conn:
         await conn.run_sync(metadata.drop_all)

@@ -10,6 +10,25 @@ from sqlalchemy.sql.expression import Select
 from tests.test_schemas import OutputSubmenuSchema, SubmenuSchema
 
 
+def get_every_submenu() -> Select:
+    """
+    Get complex ORM statement for getting
+    all submenus with all child counters
+    """
+    query = (
+        select(
+            submenu_table,
+            func.count(dish_table.c.id).label('dishes_count')
+        )
+        .outerjoin(
+            dish_table,
+            dish_table.c.submenu_id == submenu_table.c.id
+        )
+        .group_by(submenu_table.c.id)
+    )
+    return query
+
+
 def get_all_submenu(sm_id: UUID) -> Select:
     """
     Get complex ORM statement for getting

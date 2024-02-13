@@ -1,3 +1,4 @@
+import asyncio
 from uuid import UUID
 
 import pytest
@@ -57,6 +58,7 @@ class TestYSubmenuCRUD:
             assert item.title == 'My submenu 1'
             assert item.description == 'My submenu description 1'
         db_subm = await get_db_smenu(item.id)
+        await asyncio.sleep(1)
         ch_subm = await get_cache_smenu(menu.id, item.id)
         assert item == db_subm == ch_subm
         await delete_menu(menu.id)
@@ -110,6 +112,7 @@ class TestYSubmenuCRUD:
             assert r.status_code == 200
             item = OutputSubmenuSchema(**r.json())
         db_obj = await get_db_smenu(submenu.id)
+        await asyncio.sleep(1)
         cache_obj = await get_cache_smenu(menu.id, submenu.id)
         assert item == db_obj == cache_obj
         await delete_menu(menu.id)
@@ -124,6 +127,7 @@ class TestYSubmenuCRUD:
             assert r.status_code == 200
         async with Session() as s:
             result = await s.execute(get_one_submenu(submenu.id))
+            await asyncio.sleep(1)
             cache_resp = await SubmenuUOF.get(menu.id, submenu.id)
             assert cache_resp is None
             assert result.all() == []

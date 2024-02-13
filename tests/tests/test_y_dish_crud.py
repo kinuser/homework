@@ -1,4 +1,5 @@
 """Reusable CRUD tests"""
+import asyncio
 from uuid import UUID
 
 import pytest
@@ -62,6 +63,7 @@ class TestYDishCrud:
                 **(await s.execute(select(dish_table).filter_by(id=item.id)))
                 .one()._asdict()
             )
+            await asyncio.sleep(1)
             cache_obj = await get_cache_d(menu.id, submenu.id, item.id)
             assert item == db_obj == cache_obj
         await delete_menu(menu.id)
@@ -134,6 +136,7 @@ class TestYDishCrud:
                    )
                 .one()._asdict()
             )
+            await asyncio.sleep(1)
             cache_obj = await get_cache_d(menu.id, submenu.id, item.id)
             assert item == db_obj == cache_obj
         await delete_menu(menu.id)
@@ -150,6 +153,7 @@ class TestYDishCrud:
             assert r.status_code == 200
         async with Session() as s:
             result = await s.execute(select(dish_table).filter_by(id=dish.id))
+            await asyncio.sleep(1)
             cache_resp = await DishRedisRepo.get(menu.id, submenu.id, dish.id)
             assert cache_resp is False
             assert result.all() == []

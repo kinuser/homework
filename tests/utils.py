@@ -9,7 +9,7 @@ def reverse(
         menu_id: UUID | None = None,
         submenu_id: UUID | None = None,
         dish_id: UUID | None = None
-) -> str | None:
+) -> str:
     path = f'http://{APP_HOST}:{APP_PORT}'
     try:
         if menu_id and submenu_id and dish_id:
@@ -21,4 +21,4 @@ def reverse(
         return path + app.url_path_for(case)
     except Exception as e:
         print(e)
-    return None
+        return ''

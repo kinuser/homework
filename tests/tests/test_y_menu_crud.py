@@ -1,4 +1,5 @@
 """Reusable CRUD tests"""
+import asyncio
 from uuid import UUID
 
 import pytest
@@ -55,6 +56,7 @@ class TestYMenuCrud:
             assert item.title == 'My menu 1'
             assert item.description == 'My menu description 1'
             async with Session() as s:
+                await asyncio.sleep(1)
                 db_item = await MenuRepository(s).get_one(item.id)
                 cache_item = await get_cmenu(item.id)
                 assert item == db_item == cache_item
@@ -105,6 +107,7 @@ class TestYMenuCrud:
             item = OutputMenuSchema(**r.json())
             assert item.title == values['title']
             assert item.description == values['description']
+            await asyncio.sleep(1)
             updated_db_menu = await MenuUOF.get(menu.id)
             updated_cache_menu = await MenuRedisRepo.get(menu.id)
             assert updated_db_menu == item == updated_cache_menu
@@ -116,5 +119,6 @@ class TestYMenuCrud:
         async with AsyncClient() as client:
             r = await client.delete(reverse('delete_menu', db_menu.id))
             assert r.status_code == 200
+        await asyncio.sleep(1)
         result = await MenuUOF.get(db_menu.id)
         assert result is None

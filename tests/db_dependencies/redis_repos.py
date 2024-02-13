@@ -116,7 +116,7 @@ class SubmenuRedisRepo:
         return None
 
     @classmethod
-    async def get_all(cls, m_id: UUID) -> list[OutputSubmenuSchema]:
+    async def get_all(cls, m_id: UUID) -> list:
         """Get all submenus by id"""
         r = get_c()
         resp = await r.json().get(

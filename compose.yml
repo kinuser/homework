@@ -1,11 +1,12 @@
 services:
     fastapi:
         build: .
-        env_file: .Penv
+        env_file: .env
         expose:
             - 8000
         ports:
             - "8000:8000"
+
         healthcheck:
             test: ["CMD", "curl", "-f", "http://fastapi:8000/docs"]
             interval: 5s
@@ -17,11 +18,13 @@ services:
                 condition: service_healthy
             redis:
                 condition: service_healthy
+            rabbit:
+                condition: service_healthy
     db:
         image: postgres:15.1-alpine
         ports:
             - "5432:5432"
-        env_file: .Penv
+        env_file: .env
         healthcheck:
             test: ["CMD-SHELL", "pg_isready", "-U", "postgres", "-d", "homework_db", "-p", "5432", "-h", "db"]
             interval: 5s
@@ -38,9 +41,20 @@ services:
             timeout: 3s
             retries: 5
             start_period: 3s
+    rabbit:
+        image: rabbitmq:3.12-management
+        ports:
+            - "15672:15672"
+            - "5672:5672"
+        healthcheck:
+            test: rabbitmq-diagnostics -q ping
+            interval: 30s
+            timeout: 30s
+            retries: 3
+            start_period: 3s
     tests:
         build: ./tests
-        env_file: .Penv
+        env_file: .env
         depends_on:
             fastapi:
                 condition: service_healthy

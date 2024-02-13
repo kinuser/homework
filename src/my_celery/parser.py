@@ -1,13 +1,13 @@
-from typing import List
+import asyncio
+import csv
+from uuid import UUID
 
 import requests as rs
-import csv
 from celery import Celery
-from my_celery.schemas import MenuSchemaTable, SubmenuSchemaTable, DishSchemaTable
-from uuid import UUID
-from uof.uofs import AllUOF
-import asyncio
 
+from config import RAB_HOST, RAB_PORT, RED_HOST, RED_PORT, SHEET_URL
+from my_celery.schemas import DishSchemaTable, MenuSchemaTable, SubmenuSchemaTable
+from uof.uofs import AllUOF
 
 
 def str_parser(arr: list, str_type: str) -> dict | None:
@@ -21,40 +21,46 @@ def str_parser(arr: list, str_type: str) -> dict | None:
             result['dishes'] = []
             return result
         elif str_type == 'dish':
-            result['price'] = arr[3]
+            if len(arr) == 5:
+                result['price'] = str(round(float(arr[3]) * (1 - float('0.' + arr[4].replace('%', ''))), 2))
+            else:
+                result['price'] = arr[3]
             return result
         return None
     except Exception as e:
         return None
 
 
-def parse():
+def parse() -> tuple[list[MenuSchemaTable], list[SubmenuSchemaTable], list[DishSchemaTable]]:
     with open('sheet.csv', newline='') as csvfile:
         reader = csv.reader(csvfile)
-        menus_list: List[MenuSchemaTable] = []
-        submenus_list: List[SubmenuSchemaTable] = []
-        dishes_list: List[DishSchemaTable] = []
-        cur_menu_id = None | UUID
-        cur_submenu_id = None | UUID
+        menus_list: list[MenuSchemaTable] = []
+        submenus_list: list[SubmenuSchemaTable] = []
+        dishes_list: list[DishSchemaTable] = []
+        # cur_menu_id: UUID | None
+        # cur_submenu_id: UUID | None
         for row in reader:
-            print('1')
-            if str_parser(row[0:3], 'menu'):
+            print(row)
+            m_true = str_parser(row[0:3], 'menu')
+            sm_true = str_parser(row[1:4], 'submenu')
+            d_true = str_parser(row[2:7], 'dish')
+            if m_true:
                 menu = MenuSchemaTable(
-                    **str_parser(row[0:3], 'menu')
+                    **m_true
                 )
                 menus_list.append(menu)
-                cur_menu_id = menu.id
-            elif str_parser(row[1:4], 'submenu'):
+                cur_menu_id: UUID = menu.id
+            elif sm_true:
                 submenu = SubmenuSchemaTable(
                     menu_id=cur_menu_id,
-                    **str_parser(row[1:4], 'submenu')
+                    **sm_true
                 )
-                cur_submenu_id=submenu.id
+                cur_submenu_id: UUID = submenu.id
                 submenus_list.append(submenu)
-            elif str_parser(row[2:6], 'dish'):
+            elif d_true:
                 dish = DishSchemaTable(
                     submenu_id=cur_submenu_id,
-                    **str_parser(row[2:6], 'dish')
+                    **d_true
                 )
                 dishes_list.append(dish)
 
@@ -63,8 +69,8 @@ def parse():
 
 app = Celery(
     'my_celery.parser',
-    broker='amqp://guest:guest@localhost:5672',
-    backend='redis://localhost:6379/0'
+    broker=f'amqp://guest:guest@{RAB_HOST}:{RAB_PORT}',
+    backend=f'redis://{RED_HOST}:{RED_PORT}/0'
 )
 
 app.loop = asyncio.get_event_loop()
@@ -77,8 +83,7 @@ async def run_synchro():
 @app.task
 def get_and_parse():
     resp = rs.get(
-        'https://docs.google.com/spreadsheets/d/15YH38QEUAewpRDowJduQHrQVM-XGolw1JMyTvjehN_U'
-        '/export?format=csv'
+        SHEET_URL + '/export?format=csv'
     )
     with open('sheet.csv', 'w+') as f:
         f.write(resp.content.decode())

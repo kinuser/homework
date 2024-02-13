@@ -21,7 +21,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     if RED_HOST and RED_PORT:
         c = redis.Redis(host=RED_HOST, port=int(RED_PORT), decode_responses=True)
         c.json().set('menus', '$', [])
-        get_and_parse.delay()
+        get_and_parse.apply_async(countdown=60)
     yield
     async with async_engine.begin() as conn:
         await conn.run_sync(metadata.drop_all)

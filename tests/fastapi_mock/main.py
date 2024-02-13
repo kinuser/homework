@@ -109,6 +109,11 @@ async def update_dish(menu_id: UUID, submenu_id: UUID, dish_id: UUID, dish: Dish
     """Delete one dish"""
 
 
+@main_router.get('/all')
+async def get_everything():
+    """Get everything"""
+
+
 main_router.include_router(menu_router)
 main_router.include_router(submenu_router)
 main_router.include_router(dish_router)

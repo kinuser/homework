@@ -1,10 +1,13 @@
 """Module contains menu API"""
 import uuid
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 
+from database import Session
+from my_utils import invalidate_cache
+from repositories.menu import MenuRepository
 from schemas import ExceptionS, MenuSchema, OutputMenuSchema
-from uof.uofs import AllUOF, MenuUOF
+from uof.uofs import MenuUOF
 
 router = APIRouter(
     prefix='/menus',
@@ -42,9 +45,16 @@ async def get_menu(menu_id: uuid.UUID) -> OutputMenuSchema:
     response_model=OutputMenuSchema,
     tags=['post']
 )
-async def post_menu(menu: MenuSchema) -> OutputMenuSchema:
+async def post_menu(menu: MenuSchema, background_task: BackgroundTasks) -> OutputMenuSchema:
     """Create one menu"""
-    return await MenuUOF.create(menu)
+    async with Session() as s:
+        r = MenuRepository(s)
+        db_r = await r.create_one(menu)
+        if db_r:
+            await s.commit()
+            background_task.add_task(invalidate_cache)
+            return db_r
+        raise Exception('Error, something went wrong')
 
 
 @router.delete(
@@ -52,11 +62,15 @@ async def post_menu(menu: MenuSchema) -> OutputMenuSchema:
     responses={404: {'model': ExceptionS}},
     tags=['delete']
 )
-async def delete_menu(menu_id: uuid.UUID) -> None:
+async def delete_menu(menu_id: uuid.UUID, background_task: BackgroundTasks) -> None:
     """Delete one menu"""
-    if await MenuUOF.delete(menu_id):
-        return
-    raise HTTPException(status_code=404, detail='menu not found')
+    async with Session() as s:
+        r = MenuRepository(s)
+        if await r.delete_one(menu_id):
+            await s.commit()
+            background_task.add_task(invalidate_cache)
+        else:
+            raise HTTPException(status_code=404, detail='menu not found')
 
 
 @router.patch(
@@ -65,9 +79,13 @@ async def delete_menu(menu_id: uuid.UUID) -> None:
     responses={404: {'model': ExceptionS}},
     tags=['patch']
 )
-async def update_menu(menu_id: uuid.UUID, menu: MenuSchema) -> OutputMenuSchema:
+async def update_menu(menu_id: uuid.UUID, menu: MenuSchema, background_task: BackgroundTasks) -> OutputMenuSchema:
     """Delete one menu"""
-    resp = await MenuUOF.update(menu_id, menu)
-    if not resp:
-        raise HTTPException(status_code=404, detail='menu not found')
-    return resp
+    async with Session() as s:
+        r = MenuRepository(s)
+        db_r = await r.update_one(menu_id, menu)
+        if db_r:
+            await s.commit()
+            background_task.add_task(invalidate_cache)
+            return db_r
+        raise Exception('Error, something went wrong')

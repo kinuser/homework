@@ -30,6 +30,7 @@ def get_every_submenu() -> Select:
     )
     return query
 
+
 def get_all_submenu(sm_id: UUID) -> Select:
     """
     Get complex ORM statement for getting

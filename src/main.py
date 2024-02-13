@@ -10,6 +10,7 @@ from api.router import main_router as router
 from config import RED_HOST, RED_PORT
 from database import async_engine
 from models import metadata
+from my_celery.parser import app as celery_app
 from my_celery.parser import get_and_parse
 
 
@@ -23,6 +24,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         c.json().set('menus', '$', [])
         get_and_parse.apply_async(countdown=60)
     yield
+    celery_app.control.purge()
     async with async_engine.begin() as conn:
         await conn.run_sync(metadata.drop_all)
 

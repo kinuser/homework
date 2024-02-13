@@ -5,3 +5,6 @@ venv/
 .Tenv
 .Tenv
 .gitignore
+/src/my_celery/sheet.csv
+/src/sheet.csv
+/.Вenv

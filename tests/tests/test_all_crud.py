@@ -1,12 +1,12 @@
 import pytest
-from httpx import AsyncClient
-
 from db_dependencies.uofs import AllUOF
+from httpx import AsyncClient
+from utils import reverse
+
 from tests.test_schemas import MenuSchemaAll
 from tests.test_y_dish_crud import create_dish
 from tests.test_y_menu_crud import create_menu, delete_menu
 from tests.test_y_submenu_crud import create_submenu
-from utils import reverse
 
 
 @pytest.mark.asyncio(scope='session')

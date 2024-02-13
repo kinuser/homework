@@ -8,7 +8,12 @@ from models import dish_table
 from my_celery.schemas import DishSchemaTable, MenuSchemaTable, SubmenuSchemaTable
 from repositories.dish import DishRepository
 from repositories.menu import MenuRepository, get_all_menus
-from repositories.redis_repos import DishRedisRepo, MenuRedisRepo, SubmenuRedisRepo
+from repositories.redis_repos import (
+    DishRedisRepo,
+    MenuRedisRepo,
+    SubmenuRedisRepo,
+    get_c,
+)
 from repositories.submenu import SubmenuRepository, get_every_submenu
 from schemas import (
     DishSchema,
@@ -227,7 +232,7 @@ class AllUOF:
             menu_list: list[MenuSchemaTable],
             submenu_list: list[SubmenuSchemaTable],
             dish_list: list[DishSchemaTable],
-    ):
+    ) -> None:
         """Synchronize all SQLDatabase with external values"""
         async with Session() as s:
             menu_r = MenuRepository(s)
@@ -237,6 +242,9 @@ class AllUOF:
             await submenu_r.synchronize(submenu_list)
             await dish_r.synchronize(dish_list)
             await s.commit()
+            c = get_c()
+            resp = await cls.get_everything()
+            await c.json().set('menus', '$', [x.model_dump() for x in resp])
 
     @classmethod
     async def get_everything(cls) -> list[MenuSchemaAll]:
@@ -271,7 +279,7 @@ class AllUOF:
             for i in all_list:
                 submenu: dict = {}
                 for key, value in i.items():
-                    if key in ('title_1', 'description_1', 'id_1', 'menu_id', 'dishes_count'):
+                    if key in ('title_1', 'description_1', 'id_1', 'menu_id', 'dishes_count_1'):
                         submenu[key] = value
                 submenu_list.append(submenu)
             submenu_list = [dict(t) for t in {tuple(d.items()) for d in submenu_list}]
@@ -289,6 +297,8 @@ class AllUOF:
                 submenu['id'] = submenu['id_1']
                 submenu['title'] = submenu['title_1']
                 submenu['description'] = submenu['description_1']
+                submenu['dishes_count'] = submenu['dishes_count_1']
+                del submenu['dishes_count_1']
                 del submenu['id_1']
                 del submenu['title_1']
                 del submenu['description_1']

@@ -27,7 +27,7 @@ def str_parser(arr: list, str_type: str) -> dict | None:
                 result['price'] = arr[3]
             return result
         return None
-    except Exception as e:
+    except Exception:
         return None
 
 
@@ -40,7 +40,6 @@ def parse() -> tuple[list[MenuSchemaTable], list[SubmenuSchemaTable], list[DishS
         # cur_menu_id: UUID | None
         # cur_submenu_id: UUID | None
         for row in reader:
-            print(row)
             m_true = str_parser(row[0:3], 'menu')
             sm_true = str_parser(row[1:4], 'submenu')
             d_true = str_parser(row[2:7], 'dish')
